@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --color-ink: #1c2530;
+  --color-canvas: #eceff1;
+  --color-line: #cfd6db;
+  --color-muted: #5d6b77;
+  --color-accent: #f2b705;
+  --color-profit: #17794a;
+  --color-loss: #b3261e;
+}
+
+body { background: var(--color-canvas); color: var(--color-ink); }
+
+@layer components {
+  .field { @apply w-full rounded-sm border border-line bg-white px-3 py-2 text-base outline-none focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-accent; }
+  .btn { @apply inline-flex cursor-pointer items-center justify-center rounded-sm border border-line bg-white px-3 py-2 font-medium hover:bg-canvas disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-primary { @apply border-accent bg-accent font-semibold text-ink hover:brightness-95; }
+  .th { @apply border-b border-line px-3 py-2 text-left text-sm font-semibold text-muted; }
+  .td { @apply border-b border-line px-3 py-2; }
+  .num { @apply text-right tabular-nums; }
+  .label { @apply mb-1 block text-sm text-muted; }
+}
