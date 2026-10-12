@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { Vehicle, Product, Trip, Expense, fetchAll, monthRange, monthLabel, dayLabel, rs, num, errText } from '../lib/util'
+import { Vehicle, Product, Trip, Expense, fetchAll, monthRange, monthLabel, dayLabel, rs, num, errText, tripFreight } from '../lib/util'
 
 type Props = { vehicleId: number | null; setVehicleId: (id: number) => void; date: string; setDate: (d: string) => void }
 
@@ -52,16 +52,16 @@ export default function Entry({ vehicleId, setVehicleId, date, setDate }: Props)
 
   const dayTrips = trips.filter(t => t.trip_date === date)
   const dayExpense = expenses.find(e => e.expense_date === date)
-  const dayFreight = dayTrips.reduce((s, t) => s + num(t.freight), 0)
+  const dayFreight = dayTrips.reduce((s, t) => s + tripFreight(t, rates).amount, 0)
   const dayProfit = dayFreight - num(dayExpense?.total_expense)
 
   const ledger = useMemo(() => {
     const m = new Map<string, { freight: number; expense: number }>()
     const row = (d: string) => { if (!m.has(d)) m.set(d, { freight: 0, expense: 0 }); return m.get(d)! }
-    trips.forEach(t => { row(t.trip_date).freight += num(t.freight) })
+    trips.forEach(t => { row(t.trip_date).freight += tripFreight(t, rates).amount })
     expenses.forEach(e => { row(e.expense_date).expense += num(e.total_expense) })
     return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0]))
-  }, [trips, expenses])
+  }, [trips, expenses, rates])
   const monthFreight = ledger.reduce((s, [, x]) => s + x.freight, 0)
   const monthExpense = ledger.reduce((s, [, x]) => s + x.expense, 0)
 
@@ -104,13 +104,15 @@ export default function Entry({ vehicleId, setVehicleId, date, setDate }: Props)
                 <div>
                   <div className="font-semibold">
                     {t.type === 'BAGS'
-                      ? `${products.find(p => p.id === t.product_id)?.code ?? 'Product'} · ${rs(num(t.quantity))} bags × Rs ${rs(num(t.rate_used))}`
+                      ? `${products.find(p => p.id === t.product_id)?.code ?? 'Product'} · ${rs(num(t.quantity))} bags${tripFreight(t, rates).rate !== undefined ? ` × Rs ${rs(tripFreight(t, rates).rate!)}` : ''}`
                       : 'Lump sum'}
                   </div>
                   {t.note && <div className="text-sm text-muted">{t.note}</div>}
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="font-semibold tabular-nums">Rs {rs(num(t.freight))}</span>
+                  {tripFreight(t, rates).pending
+                    ? <span className="font-semibold text-loss">Rate pending</span>
+                    : <span className="font-semibold tabular-nums">Rs {rs(tripFreight(t, rates).amount)}</span>}
                   <button className="btn" onClick={() => deleteTrip(t.id)} aria-label="Delete trip">Delete</button>
                 </div>
               </li>
@@ -177,16 +179,17 @@ function TripForm({ vehicleId, date, products, rates, onSaved }: {
 
   const rate = productId ? rates[Number(productId)] : undefined
   const freight = type === 'BAGS' ? num(qty) * (rate ?? 0) : num(amount)
-  const ok = freight > 0 && (type === 'LUMPSUM' || (productId !== '' && rate !== undefined && num(qty) > 0))
+  // Bags need only a product and a quantity; the rate may be added later.
+  const ok = type === 'LUMPSUM' ? freight > 0 : productId !== '' && num(qty) > 0
 
   async function add(e: React.FormEvent) {
     e.preventDefault()
     if (!ok) return
     setBusy(true)
-    const base = { vehicle_id: vehicleId, trip_date: date, type, freight, note: note.trim() || null }
+    const base = { vehicle_id: vehicleId, trip_date: date, type, note: note.trim() || null }
     const row = type === 'BAGS'
-      ? { ...base, product_id: Number(productId), quantity: num(qty), rate_used: rate }
-      : { ...base, product_id: null, quantity: null, rate_used: null }
+      ? { ...base, product_id: Number(productId), quantity: num(qty), freight: null }
+      : { ...base, product_id: null, quantity: null, freight }
     const { error } = await supabase.from('trips').insert(row)
     setBusy(false)
     if (error) { setErr(errText(error)); return }
@@ -212,7 +215,7 @@ function TripForm({ vehicleId, date, products, rates, onSaved }: {
             <label className="label" htmlFor="qty">Bags</label>
             <input id="qty" className="field text-right tabular-nums" inputMode="decimal" value={qty} onChange={e => setQty(e.target.value)} />
           </div>
-          {productId !== '' && rate === undefined && <p className="col-span-2 text-loss">No rate for this product this month. Add it under Rates first.</p>}
+          {productId !== '' && rate === undefined && <p className="col-span-2 text-muted">No rate for this product this month yet. You can save the trip now; its freight will fill in once the rate is entered under Rates.</p>}
         </div>
       ) : (
         <div>
@@ -225,7 +228,7 @@ function TripForm({ vehicleId, date, products, rates, onSaved }: {
         <input id="note" className="field" value={note} onChange={e => setNote(e.target.value)} />
       </div>
       {err && <p role="alert" className="text-loss">{err}</p>}
-      <button className="btn btn-primary w-full" disabled={!ok || busy}>Add trip{ok ? ` · Rs ${rs(freight)}` : ''}</button>
+      <button className="btn btn-primary w-full" disabled={!ok || busy}>Add trip{ok && (type === 'LUMPSUM' || rate !== undefined) ? ` · Rs ${rs(freight)}` : ''}</button>
     </form>
   )
 }

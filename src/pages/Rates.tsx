@@ -44,13 +44,13 @@ export default function Rates({ month, setMonth }: { month: string; setMonth: (m
     if (rows.some(r => !(r.rate_per_bag >= 0))) { setErr('Every rate must be a number.'); return }
     const { error } = await supabase.from('rates').upsert(rows, { onConflict: 'month,product_id' })
     if (error) { setErr(errText(error)); return }
-    setErr(''); setMsg('Rates saved.')
+    setErr(''); setMsg(`Rates saved. All ${monthLabel(month)} trips now use them.`)
   }
 
   return (
     <div className="max-w-xl">
       <div className="mb-6"><MonthPicker month={month} onChange={setMonth} /></div>
-      <p className="mb-4 text-muted">Rate per bag for {monthLabel(month)}. Trips already entered keep the rate they were saved with, so changing a rate here never changes old trips.</p>
+      <p className="mb-4 text-muted">Rate per bag for {monthLabel(month)}. Every trip of this month is priced with these rates. Enter them whenever they are known, or correct them later, and the summary updates by itself. Other months are not affected.</p>
       <div className="border border-line bg-white">
         {products.map(p => (
           <div key={p.id} className="flex items-center justify-between gap-4 border-b border-line px-4 py-2 last:border-b-0">

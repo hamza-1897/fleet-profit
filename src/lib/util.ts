@@ -2,8 +2,8 @@ export type Vehicle = { id: number; number: string; is_active: boolean }
 export type Product = { id: number; code: string; is_active: boolean }
 export type Trip = {
   id: number; vehicle_id: number; trip_date: string; type: 'BAGS' | 'LUMPSUM'
-  product_id: number | null; quantity: number | null; rate_used: number | null
-  freight: number; note: string | null
+  product_id: number | null; quantity: number | null
+  freight: number | null; note: string | null
 }
 export type Expense = {
   id: number; vehicle_id: number; expense_date: string
@@ -49,6 +49,13 @@ export async function fetchAll<T>(build: (from: number, to: number) => PromiseLi
     if (!data || data.length < 1000) break
   }
   return out
+}
+
+// BAGS trips are priced live from the month's rate table, so rates can be entered or corrected later.
+export const tripFreight = (t: Trip, rates: Record<number, number>): { amount: number; pending: boolean; rate?: number } => {
+  if (t.type === 'LUMPSUM') return { amount: num(t.freight), pending: false }
+  const r = t.product_id === null ? undefined : rates[t.product_id]
+  return r === undefined ? { amount: 0, pending: true } : { amount: num(t.quantity) * r, pending: false, rate: r }
 }
 
 export const errText = (e: unknown) =>
