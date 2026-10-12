@@ -47,7 +47,8 @@ export default function App() {
     <div className="min-h-screen">
       <header className="bg-ink text-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-end justify-between gap-x-6 px-4 pt-4">
-          <h1 className="pb-3 text-xl font-bold">Fleet Profit</h1>
+          <h1 className="pb-3 text-xl font-bold">Abu Bakar Traders </h1>
+         
           <nav className="flex flex-wrap gap-1" aria-label="Main">
             {TABS.map(t => (
               <button

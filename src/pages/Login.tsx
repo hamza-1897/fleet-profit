@@ -17,7 +17,8 @@ export default function Login() {
 
   return (
     <div className="mx-auto mt-24 w-full max-w-sm px-4">
-      <h1 className="mb-1 text-3xl font-bold">Fleet Profit</h1>
+      <h1 className="mb-1 text-3xl font-bold">Abu Bakar Traders</h1>
+    <p className="mb-6 text-muted">Fleet Management System</p>
       <p className="mb-6 text-muted">Sign in with the office account.</p>
       <form onSubmit={submit} className="space-y-4">
         <div>
