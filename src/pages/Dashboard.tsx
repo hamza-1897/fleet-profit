@@ -145,7 +145,7 @@ export default function Dashboard({ month, setMonth, onOpen }: Props) {
           </tfoot>
         </table>
       </div>
-      <p className="mt-3 text-sm text-muted">Days = days with at least one trip. Challan is already part of expenses and is not subtracted again. Click a vehicle to enter or fix its days.</p>
+      <p className="mt-3 text-sm text-muted">Days = days with at least one trip. Challan is already part of expenses and is not subtracted again. Click a vehicle to see its day-by-day detail for this month.</p>
     </div>
   )
 }

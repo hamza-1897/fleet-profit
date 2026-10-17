@@ -5,13 +5,15 @@ import { currentMonth, todayStr } from './lib/util'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Entry from './pages/Entry'
+import VehicleDetail from './pages/VehicleDetail'
 import Rates from './pages/Rates'
 import Setup from './pages/Setup'
 
-type Tab = 'dashboard' | 'entry' | 'rates' | 'setup'
+type Tab = 'entry' | 'detail' | 'dashboard' | 'rates' | 'setup'
 const TABS: { id: Tab; label: string }[] = [
+  { id: 'entry', label: 'New entry' },
+  { id: 'detail', label: 'Vehicle detail' },
   { id: 'dashboard', label: 'Monthly summary' },
-  { id: 'entry', label: 'Daily entry' },
   { id: 'rates', label: 'Rates' },
   { id: 'setup', label: 'Vehicles & products' },
 ]
@@ -19,7 +21,7 @@ const TABS: { id: Tab; label: string }[] = [
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [ready, setReady] = useState(false)
-  const [tab, setTab] = useState<Tab>('dashboard')
+  const [tab, setTab] = useState<Tab>('entry')
   const [month, setMonth] = useState(currentMonth())
   const [vehicleId, setVehicleId] = useState<number | null>(null)
   const [date, setDate] = useState(todayStr())
@@ -36,19 +38,17 @@ export default function App() {
   if (!ready) return <p className="p-8 text-muted">Loading…</p>
   if (!session) return <Login />
 
-  // Opening a vehicle from the summary jumps to its entry page for the month being viewed.
+  // Clicking a vehicle in the summary opens its day-by-day detail for the month being viewed.
   const openVehicle = (id: number) => {
     setVehicleId(id)
-    setDate(month === currentMonth() ? todayStr() : `${month}-01`)
-    setTab('entry')
+    setTab('detail')
   }
 
   return (
     <div className="min-h-screen">
       <header className="bg-ink text-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-end justify-between gap-x-6 px-4 pt-4">
-          <h1 className="pb-3 text-xl font-bold">Abu Bakar Traders </h1>
-         
+          <h1 className="pb-3 text-xl font-bold">Fleet Profit</h1>
           <nav className="flex flex-wrap gap-1" aria-label="Main">
             {TABS.map(t => (
               <button
@@ -65,6 +65,7 @@ export default function App() {
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6">
+        {tab === 'detail' && <VehicleDetail vehicleId={vehicleId} setVehicleId={setVehicleId} month={month} setMonth={setMonth} onAddEntry={d => { setDate(d); setTab('entry') }} />}
         {tab === 'dashboard' && <Dashboard month={month} setMonth={setMonth} onOpen={openVehicle} />}
         {tab === 'entry' && <Entry vehicleId={vehicleId} setVehicleId={setVehicleId} date={date} setDate={setDate} />}
         {tab === 'rates' && <Rates month={month} setMonth={setMonth} />}
