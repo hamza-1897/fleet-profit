@@ -11,9 +11,9 @@ import Setup from './pages/Setup'
 
 type Tab = 'entry' | 'detail' | 'dashboard' | 'rates' | 'setup'
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'entry', label: 'New entry' },
-  { id: 'detail', label: 'Vehicle detail' },
   { id: 'dashboard', label: 'Monthly summary' },
+  { id: 'detail', label: 'Vehicle detail' },
+  { id: 'entry', label: 'New entry' },
   { id: 'rates', label: 'Rates' },
   { id: 'setup', label: 'Vehicles & products' },
 ]
@@ -21,7 +21,7 @@ const TABS: { id: Tab; label: string }[] = [
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [ready, setReady] = useState(false)
-  const [tab, setTab] = useState<Tab>('entry')
+  const [tab, setTab] = useState<Tab>('dashboard')
   const [month, setMonth] = useState(currentMonth())
   const [vehicleId, setVehicleId] = useState<number | null>(null)
   const [date, setDate] = useState(todayStr())
@@ -65,11 +65,13 @@ export default function App() {
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6">
+        <ErrorBoundary key={tab}>
         {tab === 'detail' && <VehicleDetail vehicleId={vehicleId} setVehicleId={setVehicleId} month={month} setMonth={setMonth} onAddEntry={d => { setDate(d); setTab('entry') }} />}
         {tab === 'dashboard' && <Dashboard month={month} setMonth={setMonth} onOpen={openVehicle} />}
         {tab === 'entry' && <Entry vehicleId={vehicleId} setVehicleId={setVehicleId} date={date} setDate={setDate} />}
         {tab === 'rates' && <Rates month={month} setMonth={setMonth} />}
         {tab === 'setup' && <Setup />}
+        </ErrorBoundary>
       </main>
     </div>
   )
