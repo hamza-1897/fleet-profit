@@ -65,13 +65,13 @@ export default function App() {
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6">
-        <ErrorBoundary key={tab}>
+       
         {tab === 'detail' && <VehicleDetail vehicleId={vehicleId} setVehicleId={setVehicleId} month={month} setMonth={setMonth} onAddEntry={d => { setDate(d); setTab('entry') }} />}
         {tab === 'dashboard' && <Dashboard month={month} setMonth={setMonth} onOpen={openVehicle} />}
         {tab === 'entry' && <Entry vehicleId={vehicleId} setVehicleId={setVehicleId} date={date} setDate={setDate} />}
         {tab === 'rates' && <Rates month={month} setMonth={setMonth} />}
         {tab === 'setup' && <Setup />}
-        </ErrorBoundary>
+     
       </main>
     </div>
   )
